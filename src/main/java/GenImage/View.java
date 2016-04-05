@@ -3,6 +3,7 @@ package GenImage;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -10,40 +11,43 @@ import java.util.logging.Logger;
  *
  * @author BigTobster
  */
-@SuppressWarnings("ClassWithTooManyFields")
+@SuppressWarnings({"ClassWithTooManyFields", "ClassWithTooManyMethods"})
 public final class View
 {
-	private static final String BOX_SIZE_LONG_OPTION        = "boxSize";
-	private static final String BOX_SIZE_OPTION_DESC        = "The amount of pixel placement tolerance in fitness comparison";
-	private static final String BOX_SIZE_SHORT_OPTION       = "b";
-	private static final String CROSSOVER_PROB_LONG_OPTION  = "crossover";
-	private static final String CROSSOVER_PROB_OPTION_DESC  = "The probability that a candidate will be selected for crossover";
-	private static final String CROSSOVER_PROB_SHORT_OPTION = "c";
-	private static final String DUMP_LONG_OPTION            = "dump";
-	private static final String DUMP_OPTION_DESC            = "The number of best candidates to export";
-	private static final String DUMP_SHORT_OPTION           = "d";
-	private static final String HELP_LONG_OPTION            = "help";
-	private static final String HELP_OPTION_DESC            = "Display help and usage info";
-	private static final String HELP_SHORT_OPTION           = "h";
-	private static final String IMPORT_LONG_OPTION          = "input";
-	private static final String IMPORT_OPTION_DESC          = "Path to directory containing images to import";
-	private static final String IMPORT_SHORT_OPTION         = "i";
-	private static final String ITERATIONS_LONG_OPTION      = "iterations";
-	private static final String ITERATIONS_OPTION_DESC      = "The number of iterations before dumping results and awaiting further instructions";
-	private static final String ITERATIONS_SHORT_OPTION     = "l";
-	private static final Logger LOGGER                      = Logger.getLogger(View.class.getName());
-	private static final String MUTATION_PROB_LONG_OPTION   = "mutation";
-	private static final String MUTATION_PROB_OPTION_DESC   = "The probability that a candidate will be mutated";
-	private static final String MUTATION_PROB_SHORT_OPTION  = "m";
-	private static final String NOVELTY_BAR_LONG_OPTION     = "noveltyBarrier";
+	private static final String APP_NAME                     = "GenImage";
+	private static final String BOX_SIZE_LONG_OPTION         = "boxSize";
+	private static final String BOX_SIZE_OPTION_DESC         = "The amount of pixel placement tolerance in fitness comparison";
+	private static final String BOX_SIZE_SHORT_OPTION        = "b";
+	private static final String CROSSOVER_PROB_LONG_OPTION   = "crossover";
+	private static final String CROSSOVER_PROB_OPTION_DESC   = "The probability that a candidate will be selected for crossover";
+	private static final String CROSSOVER_PROB_SHORT_OPTION  = "c";
+	private static final String DUMP_LONG_OPTION             = "dump";
+	private static final String DUMP_OPTION_DESC             = "The number of best candidates to export";
+	private static final String DUMP_SHORT_OPTION            = "d";
+	private static final String HELP_LONG_OPTION             = "help";
+	private static final String HELP_OPTION_DESC             = "Display help and usage info";
+	private static final String HELP_SHORT_OPTION            = "h";
+	private static final String IMPORT_LONG_OPTION           = "input";
+	private static final String IMPORT_OPTION_DESC           = "Path to directory containing images to import";
+	private static final String IMPORT_SHORT_OPTION          = "i";
+	private static final String INCORRECT_USAGE_SEE_HELP_MSG = "Incorrect usage. See help:";
+	private static final String ITERATIONS_LONG_OPTION       = "iterations";
+	private static final String ITERATIONS_OPTION_DESC       = "The number of iterations before dumping results and awaiting further instructions";
+	private static final String ITERATIONS_SHORT_OPTION      = "l";
+	@SuppressWarnings("UnusedDeclaration")
+	private static final Logger LOGGER                       = Logger.getLogger(View.class.getName());
+	private static final String MUTATION_PROB_LONG_OPTION    = "mutation";
+	private static final String MUTATION_PROB_OPTION_DESC    = "The probability that a candidate will be mutated";
+	private static final String MUTATION_PROB_SHORT_OPTION   = "m";
+	private static final String NOVELTY_BAR_LONG_OPTION      = "noveltyBarrier";
 	private static final String
 								NOVELTY_BAR_OPTION_DESC
-															= "The minimum percentage of pixels from a single input image which a candidate must match before being eliminated due to lack of novelty";
-	private static final String NOVELTY_BAR_SHORT_OPTION    = "n";
-	private static final String POP_SIZE_LONG_OPTION        = "populationSize";
-	private static final String POP_SIZE_OPTION_DESC        = "The size of the candidate population";
-	private static final String POP_SIZE_SHORT_OPTION       = "s";
-	private static final String RETENTION_LONG_OPTION       = "retention";
+															 = "The minimum percentage of pixels from a single input image which a candidate must match before being eliminated due to lack of novelty";
+	private static final String NOVELTY_BAR_SHORT_OPTION     = "n";
+	private static final String POP_SIZE_LONG_OPTION         = "populationSize";
+	private static final String POP_SIZE_OPTION_DESC         = "The size of the candidate population";
+	private static final String POP_SIZE_SHORT_OPTION        = "s";
+	private static final String RETENTION_LONG_OPTION        = "retention";
 	private static final String
 									 RETENTION_OPTION_DESC
 															 = "The percentage (as a decimal) of the population to retain during tournament selection";
@@ -61,6 +65,7 @@ public final class View
 	public View(final String[] args)
 	{
 		super();
+		View.LOGGER.setLevel(Level.ALL);
 		final Options options = new Options();
 		options.addOption(View.genImportOption());
 		options.addOption(View.genPopSizeOption());
@@ -80,13 +85,15 @@ public final class View
 		}
 		catch(final ParseException ignored)
 		{
-			//TODO Print help + user message here. Simples!
-			//TODO Test here
+			System.out.println(View.INCORRECT_USAGE_SEE_HELP_MSG);
+			View.printHelp(options);
+			System.exit(1);
 		}
-		//TODO Print help (HOW?!) if help flag present
-		//TODO Test here
-		//TODO Need to solve the dependency problem. Accompanying lib folder would work. So would shaded dependences (probably the nicest way)
-		//TODO Test here
+		if(this.commandLine.hasOption(View.HELP_SHORT_OPTION))
+		{
+			View.printHelp(options);
+			System.exit(0);
+		}
 		//TODO Slightly nicer wrappers around getters that ensure what you're getting is sane - doubles between 1 and 0, ints greater than 0/1, etc
 		//TODO Test
 	}
@@ -222,10 +229,26 @@ public final class View
 					 .build();
 	}
 
+	private static String nvl(final String str1, final String str2)
+	{
+		if(str1 != null)
+		{
+			return str1;
+		}
+		return str2;
+	}
+
+	private static void printHelp(final Options options)
+	{
+		final HelpFormatter formatter = new HelpFormatter();
+		formatter.printHelp(View.APP_NAME, options);
+	}
+
 	@SuppressWarnings({"HardCodedStringLiteral", "MagicCharacter"})
 	@Override
 	public String toString()
 	{
+		//noinspection ObjectToString
 		return "View{" +
 			   "commandLine=" + this.commandLine +
 			   '}';
@@ -233,51 +256,101 @@ public final class View
 
 	Integer getBoxSize()
 	{
-		return Integer.valueOf(this.commandLine.getOptionValue(View.BOX_SIZE_SHORT_OPTION));
+		return Integer.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.BOX_SIZE_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.BOX_SIZE_LONG_OPTION)
+						)
+							  );
 	}
 
 	Double getCrossoverProb()
 	{
-		return Double.valueOf(this.commandLine.getOptionValue(View.CROSSOVER_PROB_SHORT_OPTION));
+		return Double.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.CROSSOVER_PROB_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.CROSSOVER_PROB_LONG_OPTION)
+						)
+							 );
 	}
 
 	Integer getDumpCount()
 	{
-		return Integer.valueOf(this.commandLine.getOptionValue(View.DUMP_SHORT_OPTION));
+		return Integer.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.DUMP_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.DUMP_LONG_OPTION)
+						)
+							  );
 	}
 
 	File getImportDir()
 	{
-		return new File(this.commandLine.getOptionValue(View.IMPORT_SHORT_OPTION));
+		return new File(
+				View.nvl(
+						this.commandLine.getOptionValue(View.IMPORT_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.IMPORT_LONG_OPTION)
+						)
+		);
 	}
 
 	Integer getIterations()
 	{
-		return Integer.valueOf(this.commandLine.getOptionValue(View.ITERATIONS_SHORT_OPTION));
+		return Integer.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.ITERATIONS_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.ITERATIONS_LONG_OPTION)
+						)
+							  );
 	}
 
 	Double getMutationProb()
 	{
-		return Double.valueOf(this.commandLine.getOptionValue(View.MUTATION_PROB_SHORT_OPTION));
+		return Double.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.MUTATION_PROB_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.MUTATION_PROB_LONG_OPTION)
+						)
+							 );
 	}
 
 	Double getNoveltyBarrier()
 	{
-		return Double.valueOf(this.commandLine.getOptionValue(View.NOVELTY_BAR_SHORT_OPTION));
+		return Double.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.NOVELTY_BAR_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.NOVELTY_BAR_LONG_OPTION)
+						)
+							 );
 	}
 
 	Integer getPopSize()
 	{
-		return Integer.valueOf(this.commandLine.getOptionValue(View.POP_SIZE_SHORT_OPTION));
+		return Integer.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.POP_SIZE_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.POP_SIZE_LONG_OPTION)
+						)
+							  );
 	}
 
 	Double getRetention()
 	{
-		return Double.valueOf(this.commandLine.getOptionValue(View.RETENTION_SHORT_OPTION));
+		return Double.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.RETENTION_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.RETENTION_LONG_OPTION)
+						)
+							 );
 	}
 
 	Integer getTournSize()
 	{
-		return Integer.valueOf(this.commandLine.getOptionValue(View.TOURN_SIZE_SHORT_OPTION));
+		return Integer.valueOf(
+				View.nvl(
+						this.commandLine.getOptionValue(View.TOURN_SIZE_SHORT_OPTION),
+						this.commandLine.getOptionValue(View.TOURN_SIZE_LONG_OPTION)
+						)
+							  );
 	}
 }
