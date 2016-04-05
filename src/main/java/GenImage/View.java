@@ -112,7 +112,6 @@ public final class View
 			this.printHelp();
 			System.exit(0);
 		}
-		//TODO Test
 	}
 
 	private static Option genBoxSizeOption()
@@ -425,7 +424,7 @@ public final class View
 						this.commandLine.getOptionValue(View.NOVELTY_BAR_SHORT_OPTION),
 						this.commandLine.getOptionValue(View.NOVELTY_BAR_LONG_OPTION)
 						)
-							 );
+													);
 		if((noveltyBarrier < 0.0) || (noveltyBarrier > 1.0))
 		{
 			System.out.println(View.NOVELTY_BETWEEN_0_AND_1_MSG);
