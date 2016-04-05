@@ -1,15 +1,24 @@
 package GenImage;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.LinkedList;
 
 /**
  * The main application logic Created by Toby Leheup on 04/04/16 for GenImage.GenImage.
  *
  * @author Bigtobster
  */
+@SuppressWarnings("ClassWithTooManyMethods")
 public class GenImage
 {
+	private final int                       candidateImageHeight;
+	private final int                       candidateImageWidth;
+	@SuppressWarnings("FieldMayBeFinal")
+	private       LinkedList<BufferedImage> baseImages;
 	private Integer boxSize        = null;
+	@SuppressWarnings("FieldMayBeFinal")
+	private LinkedList<BufferedImage> candidateImages;
 	private Double  crossoverProb  = null;
 	private Integer dumpCount      = null;
 	private File    importDir      = null;
@@ -29,7 +38,16 @@ public class GenImage
 	{
 		super();
 		this.initParameters(view);
-		this.importSeedImages();
+		this.baseImages = ImageIO.importSeedImages(this.importDir);
+		this.candidateImageWidth = this.baseImages.get(0).getWidth();
+		this.candidateImageHeight = this.baseImages.get(0).getHeight();
+		this.candidateImages = new LinkedList<BufferedImage>();
+	}
+
+	private static Integer queryNextIterations()
+	{
+		//TODO Implement
+		return - 1;
 	}
 
 	@SuppressWarnings({"HardCodedStringLiteral", "MagicCharacter"})
@@ -67,7 +85,7 @@ public class GenImage
 			this.mutate();
 			if(i == (this.iterations - 1))
 			{
-				this.iterations += this.queryNextIterations();
+				this.iterations += GenImage.queryNextIterations();
 			}
 		}
 		this.dumpOutput();
@@ -84,11 +102,6 @@ public class GenImage
 	}
 
 	private void evaluate()
-	{
-		//TODO Implement
-	}
-
-	private void importSeedImages()
 	{
 		//TODO Implement
 	}
@@ -111,17 +124,15 @@ public class GenImage
 	private void initPopulation()
 	{
 
+		for(int i = 0; i < this.populationSize; i++)
+		{
+			this.candidateImages.add(ImageIO.genNoiseImage(this.candidateImageWidth, this.candidateImageHeight));
+		}
 	}
 
 	private void mutate()
 	{
 		//TODO Implement
-	}
-
-	private Integer queryNextIterations()
-	{
-		//TODO Implement
-		return - 1;
 	}
 
 	private void select()
