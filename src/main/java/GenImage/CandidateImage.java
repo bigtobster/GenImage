@@ -11,7 +11,7 @@ import java.awt.image.BufferedImage;
 public class CandidateImage implements Comparable<CandidateImage>
 {
 	private final BufferedImage image;
-	private       Integer       score;
+	private Long score;
 
 	/**
 	 * Creates a new candidate image
@@ -19,7 +19,7 @@ public class CandidateImage implements Comparable<CandidateImage>
 	 * @param newImage The candidate image
 	 * @param newScore The fitness score
 	 */
-	public CandidateImage(final BufferedImage newImage, final Integer newScore)
+	public CandidateImage(final BufferedImage newImage, final Long newScore)
 	{
 		this.image = newImage;
 		this.score = newScore;
@@ -63,7 +63,7 @@ public class CandidateImage implements Comparable<CandidateImage>
 	 *
 	 * @return The score of the candidate image
 	 */
-	public Integer getScore()
+	public Long getScore()
 	{
 		return this.score;
 	}
@@ -73,7 +73,7 @@ public class CandidateImage implements Comparable<CandidateImage>
 	 *
 	 * @param newScore The new score of the candidate image
 	 */
-	public void setScore(final Integer newScore)
+	public void setScore(final Long newScore)
 	{
 		this.score = newScore;
 	}

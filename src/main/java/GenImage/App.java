@@ -167,7 +167,7 @@ public class App
 	{
 		for(int i = 0; i < this.populationSize; i++)
 		{
-			final CandidateImage candidateImage = new CandidateImage(ImageIO.genNoiseImage(this.candidateImageWidth, this.candidateImageHeight), 0);
+			final CandidateImage candidateImage = new CandidateImage(ImageIO.genNoiseImage(this.candidateImageWidth, this.candidateImageHeight), 0L);
 			this.candidateImages.add(candidateImage);
 		}
 	}
