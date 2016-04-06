@@ -3,7 +3,7 @@ package GenImage;
 import java.awt.image.BufferedImage;
 
 /**
- * An image which is a genetic candidate Really just an image with an associated score Created by Toby Leheup on 06/04/16 for App.
+ * An image which is a genetic candidate Really just an image with an associated score Created by Toby Leheup on 06/04/16 for Application.
  *
  * @author Bigtobster
  */
@@ -32,12 +32,12 @@ public class CandidateImage implements Comparable<CandidateImage>
 		//noinspection CallToSimpleGetterFromWithinClass
 		if(foe.getScore() > this.getScore())
 		{
-			return 1;
+			return - 1;
 		}
 		//noinspection CallToSimpleGetterFromWithinClass
 		if(foe.getScore() < this.getScore())
 		{
-			return - 1;
+			return 1;
 		}
 		return 0;
 	}

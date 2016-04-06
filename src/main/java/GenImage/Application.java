@@ -14,21 +14,24 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The main application logic Created by Toby Leheup on 04/04/16 for App.App.
+ * The main application logic Created by Toby Leheup on 04/04/16 for Application.Application.
  *
  * @author Bigtobster
  */
-@SuppressWarnings("ClassWithTooManyMethods")
-public class App
+@SuppressWarnings({"ClassWithTooManyMethods", "ClassWithTooManyFields"})
+public class Application
 {
+	private static final String BASE_IMAGES_GENERATED_MSG = "Base Images Generated";
 	private static final String CONT_ITERATIONS_PARSE_ERROR_MSG = "Parse error. Did you enter an integer greater than 0?";
-	private static final File   DEBUG_DIR               = new File("./debug");
-	private static final String ENTER_FURTHER_ITERATIONS        = "Enter number of further iterations (0 to terminate): ";
-	private static final String EXPORTED_FITNESS_MSG            = " with a fitness of ";
-	private static final String EXPORTED_IMAGE_MSG              = "Exported image ";
-	private static final String ITERATIONS_COMPLETE_MSG = " images exported to ";
-	private static final Logger LOGGER                          = Logger.getLogger(App.class.getName());
-	private static final File   OUTPUT_DIR                      = new File("./output");
+	private static final File   DEBUG_DIR                 = new File("./debug");
+	private static final String ENTER_FURTHER_ITERATIONS  = "Enter number of further iterations (0 to terminate): ";
+	private static final String EXPORTED_FITNESS_MSG      = " with a fitness of ";
+	private static final String EXPORTED_IMAGE_MSG        = "Exported image ";
+	private static final String INIT_POP_GEN_MSG          = "Initial population generated";
+	private static final String ITERATIONS_COMPLETE_MSG   = " images exported to ";
+	private static final Logger LOGGER                    = Logger.getLogger(Application.class.getName());
+	private static final File   OUTPUT_DIR                = new File("./output");
+	private static final double SQUARE_POWER              = 2.0;
 	private final int                       candidateImageHeight;
 	private final int                       candidateImageWidth;
 	@SuppressWarnings("FieldMayBeFinal")
@@ -47,15 +50,16 @@ public class App
 	private Integer tournamentSize = null;
 
 	/**
-	 * Constructor for the App class
+	 * Constructor for the Application class
 	 *
 	 * @param view The CLI interface options
 	 */
-	public App(final View view)
+	public Application(final View view)
 	{
 		super();
 		this.initParameters(view);
 		this.baseImages = this.generateBaseImages();
+		System.out.println(Application.BASE_IMAGES_GENERATED_MSG);
 		this.exportDebug();
 		this.candidateImageWidth = this.baseImages.get(0).getWidth();
 		this.candidateImageHeight = this.baseImages.get(0).getHeight();
@@ -73,15 +77,15 @@ public class App
 
 	private static void exportCandidateImages(final List<CandidateImage> imagesToExport, final File outputDir, final boolean verbose)
 	{
-		App.createOutputDir(outputDir);
+		Application.createOutputDir(outputDir);
 		for(int i = 0; i < imagesToExport.size(); i++)
 		{
 			final File toFile = new File(outputDir.getPath() + File.separator + (i + 1) + '.' + ImageFormats.PNG.getName());
 			final CandidateImage image = imagesToExport.get(i);
-			App.exportImage(image.getImage(), toFile);
+			Application.exportImage(image.getImage(), toFile);
 			if(verbose)
 			{
-				final String message = App.EXPORTED_IMAGE_MSG + toFile.getName() + App.EXPORTED_FITNESS_MSG + image.getScore();
+				final String message = Application.EXPORTED_IMAGE_MSG + toFile.getName() + Application.EXPORTED_FITNESS_MSG + image.getScore();
 				System.out.println(message);
 			}
 		}
@@ -95,22 +99,22 @@ public class App
 		}
 		catch(final ImageWriteException e)
 		{
-			App.LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			Application.LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 		catch(final IOException e)
 		{
-			App.LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			Application.LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 
-	private static void exportImages(LinkedList<BufferedImage> imagesToExport, File outputDir)
+	private static void exportImages(final LinkedList<BufferedImage> imagesToExport, final File outputDir)
 	{
-		App.createOutputDir(outputDir);
+		Application.createOutputDir(outputDir);
 		for(int i = 0; i < imagesToExport.size(); i++)
 		{
 			final File toFile = new File(outputDir.getPath() + File.separator + (i + 1) + '.' + ImageFormats.PNG.getName());
 			final BufferedImage image = imagesToExport.get(i);
-			App.exportImage(image, toFile);
+			Application.exportImage(image, toFile);
 		}
 	}
 
@@ -125,7 +129,7 @@ public class App
 	@Override
 	public String toString()
 	{
-		return "App{" +
+		return "Application{" +
 			   "boxSize=" + this.boxSize +
 			   ", crossoverProb=" + this.crossoverProb +
 			   ", dumpCount=" + this.dumpCount +
@@ -143,6 +147,7 @@ public class App
 	void run()
 	{
 		this.initPopulation();
+		System.out.println(Application.INIT_POP_GEN_MSG);
 		for(int i = 0; i < this.iterations; i++)
 		{
 			this.evaluate();
@@ -150,13 +155,68 @@ public class App
 			this.crossover();
 			this.mutate();
 			//noinspection HardCodedStringLiteral
-			System.out.println("Iteration " + i + " complete");
+			System.out.println("Iteration " + (i + 1) + " complete");
 			if(i == (this.iterations - 1))
 			{
 				this.exportKBest();
 				this.iterations += this.queryNextIterations();
 			}
 		}
+	}
+
+	private Long calculateBaseDistance(final BufferedImage candidateImage, final BufferedImage baseImage)
+	{
+		Long distance = 0L;
+		for(int w = 0; w < candidateImage.getWidth(); w++)
+		{
+			for(int h = 0; h < candidateImage.getHeight(); h++)
+			{
+				distance += this.calculatePixelBaseDistance(candidateImage, w, h, baseImage);
+			}
+		}
+		return distance;
+	}
+
+	private Long calculateFitness(final BufferedImage candidateImage, final BufferedImage baseImage)
+	{
+		return this.calculateBaseDistance(candidateImage, baseImage) + this.calculateNeighbourDistance(candidateImage);
+	}
+
+	private Long calculateNeighbourDistance(final BufferedImage candidateImage)
+	{
+		Long distance = 0L;
+		for(int w = 0; w < candidateImage.getWidth(); w++)
+		{
+			for(int h = 0; h < candidateImage.getHeight(); h++)
+			{
+				distance += this.calculatePixelBaseDistance(candidateImage, w, h, candidateImage);
+			}
+		}
+		return distance;
+	}
+
+	private Long calculatePixelBaseDistance(final BufferedImage candidateImage, final int w, final int h, final BufferedImage baseImage)
+	{
+		final int halfBox = this.boxSize / 2;
+		final int halfBoxWStart = Math.max(0, w - halfBox);
+		final int halfBoxWEnd = Math.min(this.candidateImageWidth - 1, w + halfBox);
+		final int halfBoxHStart = Math.max(0, h - halfBox);
+		final int halfBoxHEnd = Math.min(this.candidateImageHeight - 1, h + halfBox);
+		final int targetColour = candidateImage.getRGB(w, h);
+		Long distance = 0L;
+		for(int i = halfBoxWStart; i <= halfBoxWEnd; i++)
+		{
+			for(int j = halfBoxHStart; j <= halfBoxHEnd; j++)
+			{
+				final int currentColour = baseImage.getRGB(i, j);
+				final double wDiff = (double) Math.abs(w - i);
+				final double hDiff = (double) Math.abs(h - j);
+				@SuppressWarnings("NonReproducibleMathCall")
+				final double euclideanDistance = Math.sqrt(Math.pow(wDiff, Application.SQUARE_POWER) + Math.pow(hDiff, Application.SQUARE_POWER));
+				distance += Math.round((double) Math.abs(currentColour - targetColour) * euclideanDistance);
+			}
+		}
+		return distance;
 	}
 
 	private void crossover()
@@ -166,19 +226,32 @@ public class App
 
 	private void evaluate()
 	{
-		//TODO Implement
+		for(final CandidateImage candidateImage : this.candidateImages)
+		{
+			candidateImage.setScore(this.evaluateScore(candidateImage));
+		}
+	}
+
+	private Long evaluateScore(final CandidateImage candidateImage)
+	{
+		final TreeSet<Long> scoreSet = new TreeSet<Long>();
+		for(final BufferedImage baseImage : this.baseImages)
+		{
+			scoreSet.add(this.calculateFitness(candidateImage.getImage(), baseImage));
+		}
+		return scoreSet.pollFirst();
 	}
 
 	private void exportDebug()
 	{
-		App.exportImages(this.baseImages, App.DEBUG_DIR);
+		Application.exportImages(this.baseImages, Application.DEBUG_DIR);
 	}
 
 	private void exportKBest()
 	{
-		final List<CandidateImage> imagesToExport = App.getKBest(this.candidateImages, this.dumpCount);
-		App.exportCandidateImages(imagesToExport, App.OUTPUT_DIR, true);
-		System.out.println(imagesToExport.size() + App.ITERATIONS_COMPLETE_MSG + App.OUTPUT_DIR);
+		final List<CandidateImage> imagesToExport = Application.getKBest(this.candidateImages, this.dumpCount);
+		Application.exportCandidateImages(imagesToExport, Application.OUTPUT_DIR, true);
+		System.out.println(imagesToExport.size() + Application.ITERATIONS_COMPLETE_MSG + Application.OUTPUT_DIR);
 	}
 
 	private LinkedList<BufferedImage> generateBaseImages()
@@ -234,10 +307,10 @@ public class App
 		final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 		try
 		{
-			System.out.print(App.ENTER_FURTHER_ITERATIONS);
+			System.out.print(Application.ENTER_FURTHER_ITERATIONS);
 			try
 			{
-				continueIterations = Integer.parseInt(bufferedReader.readLine().replace(App.ENTER_FURTHER_ITERATIONS, "").trim());
+				continueIterations = Integer.parseInt(bufferedReader.readLine().replace(Application.ENTER_FURTHER_ITERATIONS, "").trim());
 				if(continueIterations < 0)
 				{
 					//noinspection ThrowCaughtLocally
@@ -246,13 +319,13 @@ public class App
 			}
 			catch(final NumberFormatException ignored)
 			{
-				System.out.print(App.CONT_ITERATIONS_PARSE_ERROR_MSG);
+				System.out.print(Application.CONT_ITERATIONS_PARSE_ERROR_MSG);
 				this.queryNextIterations();
 			}
 		}
 		catch(final IOException e)
 		{
-			App.LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			Application.LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 		return continueIterations;
 	}

@@ -2,7 +2,7 @@ package GenImage;
 
 /**
  * Invoking class for application. Doesn't do anything else
- * Created by Toby Leheup on 05/04/16 for App.
+ * Created by Toby Leheup on 05/04/16 for Application.
  * @author Bigtobster
  */
 public final class Main
@@ -15,7 +15,7 @@ public final class Main
 	public static void main(final String[] args)
 	{
 		final View view = new View(args);
-		final App app = new App(view);
-		app.run();
+		final Application application = new Application(view);
+		application.run();
 	}
 }
