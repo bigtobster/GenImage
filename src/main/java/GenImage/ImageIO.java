@@ -18,7 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Controls the import and export of images Created by Toby Leheup on 05/04/16 for GenImage. This file is APACHE GPL 2
+ * Controls the import and export of images Created by Toby Leheup on 05/04/16 for App. This file is APACHE GPL 2
  *
  * @author Bigtobster
  * @author https://svn.apache.org/repos/asf/commons/proper/imaging/trunk/src/test/java/org/apache/commons/imaging/examples/ImageReadExample.java

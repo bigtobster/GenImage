@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The Interface to GenImage Created by Toby Leheup on 04/04/16 for GenImage.GenImage.
+ * The Interface to App Created by Toby Leheup on 04/04/16 for App.App.
  *
  * @author BigTobster
  */
