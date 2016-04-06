@@ -6,6 +6,7 @@ import org.apache.commons.imaging.common.ImageBuilder;
 import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 /**
  * Performs transformations on images Created by Toby Leheup on 06/04/16 for GenImage.
@@ -18,7 +19,9 @@ public final class ImageManipulator
 	/**
 	 * The colours available for each channel in RGB
 	 */
-	static final int RGB_RANGE = 256;
+	static final         int    RGB_RANGE = 256;
+	@SuppressWarnings("ConstantNamingConvention")
+	private static final double HALF      = 0.5;
 
 	/**
 	 * Converts a colour image to Greyscale
@@ -57,6 +60,32 @@ public final class ImageManipulator
 												)
 				);
 				imageBuilder.setRGB(w, h, invertedColour.getRGB());
+			}
+		}
+		return imageBuilder.getBufferedImage();
+	}
+
+	@SuppressWarnings("StaticMethodOnlyUsedInOneClass")
+	static BufferedImage breedCandidates(final BufferedImage mother, final BufferedImage father)
+	{
+		final int width = mother.getWidth();
+		final int height = mother.getHeight();
+		final ImageBuilder imageBuilder = new ImageBuilder(width, height, false);
+		final Random randy = new Random(System.currentTimeMillis());
+		for(int w = 0; w < width; w++)
+		{
+			for(int h = 0; h < height; h++)
+			{
+				final int colour;
+				if(randy.nextDouble() < ImageManipulator.HALF)
+				{
+					colour = mother.getRGB(w, h);
+				}
+				else
+				{
+					colour = father.getRGB(w, h);
+				}
+				imageBuilder.setRGB(w, h, colour);
 			}
 		}
 		return imageBuilder.getBufferedImage();

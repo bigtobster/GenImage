@@ -125,6 +125,12 @@ public class Application
 
 	}
 
+	private static ArrayList<CandidateImage> mutate(final ArrayList<CandidateImage> parents)
+	{
+		//TODO Implement
+		return null;
+	}
+
 	private static CandidateImage tournamentSelect(final ArrayList<CandidateImage> imagePool, final Integer size)
 	{
 		final TreeSet<CandidateImage> imageRanker = new TreeSet<CandidateImage>();
@@ -162,9 +168,11 @@ public class Application
 		for(int i = 0; i < this.iterations; i++)
 		{
 			this.evaluate();
-			this.select();
-			this.crossover();
-			this.mutate();
+			final ArrayList<CandidateImage> chosenCandidates = this.select();
+			ArrayList<CandidateImage> childCandidates = this.crossover(chosenCandidates);
+			childCandidates = this.mutate(childCandidates);
+			childCandidates.addAll(chosenCandidates);
+			this.candidateImages = childCandidates;
 			//noinspection HardCodedStringLiteral
 			System.out.println("Iteration " + (i + 1) + " complete");
 			if(i == (this.iterations - 1))
@@ -230,9 +238,22 @@ public class Application
 		return distance;
 	}
 
-	private void crossover()
+	private ArrayList<CandidateImage> crossover(final ArrayList<CandidateImage> chosenImages)
 	{
-		//TODO Implement
+		final int childrenRequired = this.populationSize - chosenImages.size();
+		final ArrayList<CandidateImage> children = new ArrayList<CandidateImage>(childrenRequired);
+		final Random randy = new Random(System.currentTimeMillis());
+		while(children.size() < childrenRequired)
+		{
+			if(randy.nextDouble() < this.crossoverProb)
+			{
+				final CandidateImage mother = chosenImages.get(randy.nextInt(chosenImages.size()));
+				final CandidateImage father = chosenImages.get(randy.nextInt(chosenImages.size()));
+				final CandidateImage child = new CandidateImage(ImageManipulator.breedCandidates(mother.getImage(), father.getImage()), 0L);
+				children.add(child);
+			}
+		}
+		return children;
 	}
 
 	private void evaluate()
@@ -306,11 +327,6 @@ public class Application
 		}
 	}
 
-	private void mutate()
-	{
-		//TODO Implement
-	}
-
 	private Integer queryNextIterations()
 	{
 		int continueIterations = 0;
@@ -341,7 +357,7 @@ public class Application
 		return continueIterations;
 	}
 
-	private void select()
+	private ArrayList<CandidateImage> select()
 	{
 		final ArrayList<CandidateImage> newCandidateImages = new ArrayList<CandidateImage>(this.populationSize);
 		@SuppressWarnings("NumericCastThatLosesPrecision")
@@ -350,6 +366,6 @@ public class Application
 		{
 			newCandidateImages.add(Application.tournamentSelect(this.candidateImages, this.tournamentSize));
 		}
-		this.candidateImages = newCandidateImages;
+		return newCandidateImages;
 	}
 }
