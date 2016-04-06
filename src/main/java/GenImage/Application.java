@@ -125,6 +125,17 @@ public class Application
 
 	}
 
+	private static CandidateImage tournamentSelect(final ArrayList<CandidateImage> imagePool, final Integer size)
+	{
+		final TreeSet<CandidateImage> imageRanker = new TreeSet<CandidateImage>();
+		final Random randy = new Random(System.currentTimeMillis());
+		for(int i = 0; i < size; i++)
+		{
+			imageRanker.add(imagePool.get(randy.nextInt(imagePool.size())));
+		}
+		return imageRanker.pollFirst();
+	}
+
 	@SuppressWarnings({"HardCodedStringLiteral", "MagicCharacter"})
 	@Override
 	public String toString()
@@ -332,6 +343,13 @@ public class Application
 
 	private void select()
 	{
-		//TODO Implement
+		final ArrayList<CandidateImage> newCandidateImages = new ArrayList<CandidateImage>(this.populationSize);
+		@SuppressWarnings("NumericCastThatLosesPrecision")
+		final int populationSurvivors = (int) (this.populationSize * this.retentionRate);
+		while(newCandidateImages.size() < populationSurvivors)
+		{
+			newCandidateImages.add(Application.tournamentSelect(this.candidateImages, this.tournamentSize));
+		}
+		this.candidateImages = newCandidateImages;
 	}
 }
