@@ -96,4 +96,21 @@ public final class ImageManipulator
 	{
 		return r + (g * ImageManipulator.RGB_RANGE) + (b * ImageManipulator.RGB_RANGE * ImageManipulator.RGB_RANGE);
 	}
+
+	@SuppressWarnings("StaticMethodOnlyUsedInOneClass")
+	static BufferedImage mutateImage(final BufferedImage image)
+	{
+		final Random randy = new Random(System.currentTimeMillis());
+		final int pixelsToMutate = randy.nextInt(image.getHeight() * image.getWidth());
+		for(int i = 0; i < pixelsToMutate; i++)
+		{
+			final int w = randy.nextInt(image.getWidth());
+			final int h = randy.nextInt(image.getHeight());
+			final int r = randy.nextInt(ImageManipulator.RGB_RANGE);
+			final int g = randy.nextInt(ImageManipulator.RGB_RANGE);
+			final int b = randy.nextInt(ImageManipulator.RGB_RANGE);
+			image.setRGB(w, h, ImageManipulator.calcRGB(r, g, b));
+		}
+		return image;
+	}
 }

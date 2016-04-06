@@ -125,12 +125,6 @@ public class Application
 
 	}
 
-	private static ArrayList<CandidateImage> mutate(final ArrayList<CandidateImage> parents)
-	{
-		//TODO Implement
-		return null;
-	}
-
 	private static CandidateImage tournamentSelect(final ArrayList<CandidateImage> imagePool, final Integer size)
 	{
 		final TreeSet<CandidateImage> imageRanker = new TreeSet<CandidateImage>();
@@ -325,6 +319,20 @@ public class Application
 			final CandidateImage candidateImage = new CandidateImage(ImageIO.genNoiseImage(this.candidateImageWidth, this.candidateImageHeight), 0L);
 			this.candidateImages.add(candidateImage);
 		}
+	}
+
+	private ArrayList<CandidateImage> mutate(final ArrayList<CandidateImage> candidates)
+	{
+		final Random randy = new Random(System.currentTimeMillis());
+		for(final CandidateImage victim : candidates)
+		{
+			if(randy.nextDouble() < this.mutationProb)
+			{
+				candidates.remove(victim);
+				candidates.add(new CandidateImage(ImageManipulator.mutateImage(victim.getImage()), 0L));
+			}
+		}
+		return candidates;
 	}
 
 	private Integer queryNextIterations()
