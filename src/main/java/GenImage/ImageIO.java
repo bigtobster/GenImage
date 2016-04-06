@@ -4,6 +4,7 @@ import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
 import org.apache.commons.imaging.ImagingConstants;
 import org.apache.commons.imaging.common.BufferedImageFactory;
+import org.apache.commons.imaging.common.ImageBuilder;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,7 +25,8 @@ import java.util.logging.Logger;
  */
 public final class ImageIO
 {
-	private static final Logger LOGGER = Logger.getLogger(ImageIO.class.getName());
+	private static final Logger LOGGER    = Logger.getLogger(ImageIO.class.getName());
+	private static final int    RGB_RANGE = 256;
 
 	@SuppressWarnings({"PublicInnerClass", "JavaDoc"})
 	public static class ManagedImageBufferedImageFactory implements BufferedImageFactory
@@ -101,6 +104,11 @@ public final class ImageIO
 		return Imaging.getBufferedImage(file, params);
 	}
 
+	private static int calcRGB(final int r, final int g, final int b)
+	{
+		return r + (g * ImageIO.RGB_RANGE) + (b * ImageIO.RGB_RANGE * ImageIO.RGB_RANGE);
+	}
+
 	/**
 	 * Generates an image that is just a load of random coloured pixels jammed together
 	 *
@@ -109,6 +117,19 @@ public final class ImageIO
 	@SuppressWarnings("StaticMethodOnlyUsedInOneClass")
 	static BufferedImage genNoiseImage(final int width, final int height)
 	{
-		return null;
+		final ImageBuilder imageBuilder = new ImageBuilder(width, height, false);
+		final Random randy = new Random(System.currentTimeMillis());
+		for(int w = 0; w < width; w++)
+		{
+			for(int h = 0; h < height; h++)
+			{
+				final int r = randy.nextInt(ImageIO.RGB_RANGE);
+				final int g = randy.nextInt(ImageIO.RGB_RANGE);
+				final int b = randy.nextInt(ImageIO.RGB_RANGE);
+				final int rgb = ImageIO.calcRGB(r, g, b);
+				imageBuilder.setRGB(w, h, rgb);
+			}
+		}
+		return imageBuilder.getBufferedImage();
 	}
 }
