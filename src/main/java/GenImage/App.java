@@ -22,13 +22,13 @@ import java.util.logging.Logger;
 public class App
 {
 	private static final String CONT_ITERATIONS_PARSE_ERROR_MSG = "Parse error. Did you enter an integer greater than 0?";
+	private static final File   DEBUG_DIR               = new File("./debug");
 	private static final String ENTER_FURTHER_ITERATIONS        = "Enter number of further iterations (0 to terminate): ";
 	private static final String EXPORTED_FITNESS_MSG            = " with a fitness of ";
 	private static final String EXPORTED_IMAGE_MSG              = "Exported image ";
-	private static final String ITERATIONS_COMPLETE_MSG         = " images exported. Output dumped to ";
+	private static final String ITERATIONS_COMPLETE_MSG = " images exported to ";
 	private static final Logger LOGGER                          = Logger.getLogger(App.class.getName());
 	private static final File   OUTPUT_DIR                      = new File("./output");
-	private static final char   SPACE                           = ' ';
 	private final int                       candidateImageHeight;
 	private final int                       candidateImageWidth;
 	@SuppressWarnings("FieldMayBeFinal")
@@ -55,18 +55,62 @@ public class App
 	{
 		super();
 		this.initParameters(view);
-		this.baseImages = ImageIO.importSeedImages(this.importDir);
+		this.baseImages = this.generateBaseImages();
+		this.exportDebug();
 		this.candidateImageWidth = this.baseImages.get(0).getWidth();
 		this.candidateImageHeight = this.baseImages.get(0).getHeight();
 		this.candidateImages = new ArrayList<CandidateImage>(this.populationSize);
 	}
 
-	private static void createOutputDir()
+	private static void createOutputDir(final File dir)
 	{
-		if(! App.OUTPUT_DIR.exists())
+		if(! dir.exists())
 		{
 			//noinspection ResultOfMethodCallIgnored
-			App.OUTPUT_DIR.mkdir();
+			dir.mkdir();
+		}
+	}
+
+	private static void exportCandidateImages(final List<CandidateImage> imagesToExport, final File outputDir, final boolean verbose)
+	{
+		App.createOutputDir(outputDir);
+		for(int i = 0; i < imagesToExport.size(); i++)
+		{
+			final File toFile = new File(outputDir.getPath() + File.separator + (i + 1) + '.' + ImageFormats.PNG.getName());
+			final CandidateImage image = imagesToExport.get(i);
+			App.exportImage(image.getImage(), toFile);
+			if(verbose)
+			{
+				final String message = App.EXPORTED_IMAGE_MSG + toFile.getName() + App.EXPORTED_FITNESS_MSG + image.getScore();
+				System.out.println(message);
+			}
+		}
+	}
+
+	private static void exportImage(final BufferedImage image, final File toFile)
+	{
+		try
+		{
+			Imaging.writeImage(image, toFile, ImageFormats.PNG, new HashMap<String, Object>(0));
+		}
+		catch(final ImageWriteException e)
+		{
+			App.LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+		catch(final IOException e)
+		{
+			App.LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+	}
+
+	private static void exportImages(LinkedList<BufferedImage> imagesToExport, File outputDir)
+	{
+		App.createOutputDir(outputDir);
+		for(int i = 0; i < imagesToExport.size(); i++)
+		{
+			final File toFile = new File(outputDir.getPath() + File.separator + (i + 1) + '.' + ImageFormats.PNG.getName());
+			final BufferedImage image = imagesToExport.get(i);
+			App.exportImage(image, toFile);
 		}
 	}
 
@@ -105,9 +149,11 @@ public class App
 			this.select();
 			this.crossover();
 			this.mutate();
+			//noinspection HardCodedStringLiteral
+			System.out.println("Iteration " + i + " complete");
 			if(i == (this.iterations - 1))
 			{
-				this.export();
+				this.exportKBest();
 				this.iterations += this.queryNextIterations();
 			}
 		}
@@ -123,29 +169,33 @@ public class App
 		//TODO Implement
 	}
 
-	private void export()
+	private void exportDebug()
 	{
-		final List<CandidateImage> bestCandidates = App.getKBest(this.candidateImages, this.dumpCount);
-		App.createOutputDir();
-		for(int i = 0; i < bestCandidates.size(); i++)
+		App.exportImages(this.baseImages, App.DEBUG_DIR);
+	}
+
+	private void exportKBest()
+	{
+		final List<CandidateImage> imagesToExport = App.getKBest(this.candidateImages, this.dumpCount);
+		App.exportCandidateImages(imagesToExport, App.OUTPUT_DIR, true);
+		System.out.println(imagesToExport.size() + App.ITERATIONS_COMPLETE_MSG + App.OUTPUT_DIR);
+	}
+
+	private LinkedList<BufferedImage> generateBaseImages()
+	{
+		final LinkedList<BufferedImage> originals = ImageIO.importSeedImages(this.importDir);
+		final LinkedList<BufferedImage> greyscales = new LinkedList<BufferedImage>();
+		final LinkedList<BufferedImage> inversions = new LinkedList<BufferedImage>();
+		for(final BufferedImage original : originals)
 		{
-			final CandidateImage candidateImage = bestCandidates.get(i);
-			final File toFile = new File(App.OUTPUT_DIR.getPath() + File.separator + (i + 1) + '.' + ImageFormats.PNG.getName());
-			try
-			{
-				Imaging.writeImage(candidateImage.getImage(), toFile, ImageFormats.PNG, new HashMap<String, Object>(0));
-				System.out.println(App.EXPORTED_IMAGE_MSG + toFile.getName() + App.EXPORTED_FITNESS_MSG + candidateImage.getScore());
-			}
-			catch(final ImageWriteException e)
-			{
-				App.LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			}
-			catch(final IOException e)
-			{
-				App.LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			}
+			greyscales.add(ImageManipulator.toGreyscale(original));
 		}
-		System.out.println(bestCandidates.size() + App.ITERATIONS_COMPLETE_MSG + App.OUTPUT_DIR);
+		for(final BufferedImage greyscale : greyscales)
+		{
+			inversions.add(ImageManipulator.toInvertedGreyscale(greyscale));
+		}
+		greyscales.addAll(inversions);
+		return greyscales;
 	}
 
 	@SuppressWarnings("FeatureEnvy")

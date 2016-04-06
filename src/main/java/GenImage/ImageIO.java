@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 public final class ImageIO
 {
 	private static final Logger LOGGER    = Logger.getLogger(ImageIO.class.getName());
-	private static final int    RGB_RANGE = 256;
 
 	@SuppressWarnings({"PublicInnerClass", "JavaDoc"})
 	public static class ManagedImageBufferedImageFactory implements BufferedImageFactory
@@ -104,11 +103,6 @@ public final class ImageIO
 		return Imaging.getBufferedImage(file, params);
 	}
 
-	private static int calcRGB(final int r, final int g, final int b)
-	{
-		return r + (g * ImageIO.RGB_RANGE) + (b * ImageIO.RGB_RANGE * ImageIO.RGB_RANGE);
-	}
-
 	/**
 	 * Generates an image that is just a load of random coloured pixels jammed together
 	 *
@@ -123,10 +117,10 @@ public final class ImageIO
 		{
 			for(int h = 0; h < height; h++)
 			{
-				final int r = randy.nextInt(ImageIO.RGB_RANGE);
-				final int g = randy.nextInt(ImageIO.RGB_RANGE);
-				final int b = randy.nextInt(ImageIO.RGB_RANGE);
-				final int rgb = ImageIO.calcRGB(r, g, b);
+				final int r = randy.nextInt(ImageManipulator.RGB_RANGE);
+				final int g = randy.nextInt(ImageManipulator.RGB_RANGE);
+				final int b = randy.nextInt(ImageManipulator.RGB_RANGE);
+				final int rgb = ImageManipulator.calcRGB(r, g, b);
 				imageBuilder.setRGB(w, h, rgb);
 			}
 		}
