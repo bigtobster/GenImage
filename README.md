@@ -38,7 +38,7 @@ If you need some images, you can find some in the src tree. See `src/test/resour
 
 ### Help
 
-The below is a straight lift from the executable's help screen
+The below is a straight lift from the application help screen
 
 `usage: GenImage`
 `
