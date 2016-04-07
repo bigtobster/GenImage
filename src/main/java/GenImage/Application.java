@@ -21,24 +21,28 @@ import java.util.logging.Logger;
 @SuppressWarnings({"ClassWithTooManyMethods", "ClassWithTooManyFields"})
 public class Application
 {
-	private static final String BASE_IMAGES_GENERATED_MSG = "Base Images Generated";
-	private static final String CONT_ITERATIONS_PARSE_ERROR_MSG = "Parse error. Did you enter an integer greater than 0?";
-	private static final File   DEBUG_DIR                 = new File("./debug");
-	private static final String ENTER_FURTHER_ITERATIONS  = "Enter number of further iterations (0 to terminate): ";
-	private static final String EXPORTED_FITNESS_MSG      = " with a fitness of ";
-	private static final String EXPORTED_IMAGE_MSG        = "Exported image ";
-	private static final String INIT_POP_GEN_MSG          = "Initial population generated";
-	private static final String ITERATIONS_COMPLETE_MSG   = " images exported to ";
-	private static final Logger LOGGER                    = Logger.getLogger(Application.class.getName());
-	private static final File   OUTPUT_DIR                = new File("./output");
-	private static final double SQUARE_POWER              = 2.0;
+	private static final String BASE_IMAGES_GENERATED_MSG        = "Base Images Generated";
+	private static final String BREEDING_NEW_CANDIDATES_MSG      = "Breeding New Candidates...";
+	private static final String CALCULATING_FITNESS_MSG          = "Calculating Fitness...";
+	private static final String CONT_ITERATIONS_PARSE_ERROR_MSG  = "Parse error. Did you enter an integer greater than 0?";
+	private static final File   DEBUG_DIR                        = new File("./debug");
+	private static final String ENTER_FURTHER_ITERATIONS         = "Enter number of further iterations (0 to terminate): ";
+	private static final String EXPORTED_FITNESS_MSG             = " with a fitness of ";
+	private static final String EXPORTED_IMAGE_MSG               = "Exported image ";
+	private static final String INIT_POP_GEN_MSG                 = "Initial population generated";
+	private static final String ITERATIONS_COMPLETE_MSG          = " images exported to ";
+	private static final Logger LOGGER                           = Logger.getLogger(Application.class.getName());
+	private static final String MUTATING_NEW_CANDIDATES_MSG      = "Mutating New Candidates...";
+	private static final File   OUTPUT_DIR                       = new File("./output");
+	private static final String SELECTING_FITTEST_CANDIDATES_MSG = "Selecting Fittest Candidates...";
+	private static final double SQUARE_POWER                     = 2.0;
 	private final int                       candidateImageHeight;
 	private final int                       candidateImageWidth;
 	@SuppressWarnings("FieldMayBeFinal")
 	private       LinkedList<BufferedImage> baseImages;
 	private Integer boxSize = null;
 	@SuppressWarnings("FieldMayBeFinal")
-	private ArrayList<CandidateImage> candidateImages;
+	private HashSet<CandidateImage> candidateImages;
 	private Double  crossoverProb  = null;
 	private Integer dumpCount      = null;
 	private File    importDir      = null;
@@ -63,7 +67,7 @@ public class Application
 		this.exportDebug();
 		this.candidateImageWidth = this.baseImages.get(0).getWidth();
 		this.candidateImageHeight = this.baseImages.get(0).getHeight();
-		this.candidateImages = new ArrayList<CandidateImage>(this.populationSize);
+		this.candidateImages = new HashSet<CandidateImage>(this.populationSize);
 	}
 
 	private static void createOutputDir(final File dir)
@@ -118,20 +122,32 @@ public class Application
 		}
 	}
 
-	private static List<CandidateImage> getKBest(final ArrayList<CandidateImage> candidates, final Integer k)
+	private static List<CandidateImage> getKBest(final HashSet<CandidateImage> candidates, final Integer k)
 	{
-		Collections.sort(candidates);
-		return candidates.subList(0, k);
+		final ArrayList<CandidateImage> candidatesList = Application.hashsetToArrayList(candidates);
+		Collections.sort(candidatesList);
+		return candidatesList.subList(0, k);
 
 	}
 
-	private static CandidateImage tournamentSelect(final ArrayList<CandidateImage> imagePool, final Integer size)
+	private static ArrayList<CandidateImage> hashsetToArrayList(final HashSet<CandidateImage> hashSet)
+	{
+		final ArrayList<CandidateImage> imageList = new ArrayList<CandidateImage>(hashSet.size());
+		for(final CandidateImage image : hashSet)
+		{
+			imageList.add(image);
+		}
+		return imageList;
+	}
+
+	private static CandidateImage tournamentSelect(final HashSet<CandidateImage> imagePool, final Integer size)
 	{
 		final TreeSet<CandidateImage> imageRanker = new TreeSet<CandidateImage>();
-		final Random randy = new Random(System.currentTimeMillis());
+		final Random randy = new Random(System.nanoTime());
+		final ArrayList<CandidateImage> imageList = Application.hashsetToArrayList(imagePool);
 		for(int i = 0; i < size; i++)
 		{
-			imageRanker.add(imagePool.get(randy.nextInt(imagePool.size())));
+			imageRanker.add(imageList.get(randy.nextInt(imagePool.size())));
 		}
 		return imageRanker.pollFirst();
 	}
@@ -161,19 +177,28 @@ public class Application
 		System.out.println(Application.INIT_POP_GEN_MSG);
 		for(int i = 0; i < this.iterations; i++)
 		{
+			System.out.println(Application.CALCULATING_FITNESS_MSG);
 			this.evaluate();
-			final ArrayList<CandidateImage> chosenCandidates = this.select();
-			ArrayList<CandidateImage> childCandidates = this.crossover(chosenCandidates);
+			if(i == (this.iterations - 1))
+			{
+				this.exportKBest();
+				final int moreIterations = this.queryNextIterations();
+				if(moreIterations == 0)
+				{
+					return;
+				}
+				this.iterations += moreIterations;
+			}
+			System.out.println(Application.SELECTING_FITTEST_CANDIDATES_MSG);
+			final HashSet<CandidateImage> chosenCandidates = this.select();
+			System.out.println(Application.BREEDING_NEW_CANDIDATES_MSG);
+			HashSet<CandidateImage> childCandidates = this.crossover(chosenCandidates);
+			System.out.println(Application.MUTATING_NEW_CANDIDATES_MSG);
 			childCandidates = this.mutate(childCandidates);
 			childCandidates.addAll(chosenCandidates);
 			this.candidateImages = childCandidates;
 			//noinspection HardCodedStringLiteral
 			System.out.println("Iteration " + (i + 1) + " complete");
-			if(i == (this.iterations - 1))
-			{
-				this.exportKBest();
-				this.iterations += this.queryNextIterations();
-			}
 		}
 	}
 
@@ -192,7 +217,7 @@ public class Application
 
 	private Long calculateFitness(final BufferedImage candidateImage, final BufferedImage baseImage)
 	{
-		return this.calculateBaseDistance(candidateImage, baseImage) + this.calculateNeighbourDistance(candidateImage);
+		return this.calculateBaseDistance(candidateImage, baseImage);
 	}
 
 	private Long calculateNeighbourDistance(final BufferedImage candidateImage)
@@ -215,37 +240,35 @@ public class Application
 		final int halfBoxWEnd = Math.min(this.candidateImageWidth - 1, w + halfBox);
 		final int halfBoxHStart = Math.max(0, h - halfBox);
 		final int halfBoxHEnd = Math.min(this.candidateImageHeight - 1, h + halfBox);
-		final int targetColour = candidateImage.getRGB(w, h);
+		final int targetColour = Math.abs(candidateImage.getRGB(w, h));
 		Long distance = 0L;
 		for(int i = halfBoxWStart; i <= halfBoxWEnd; i++)
 		{
 			for(int j = halfBoxHStart; j <= halfBoxHEnd; j++)
 			{
-				final int currentColour = baseImage.getRGB(i, j);
+				final int currentColour = Math.abs(baseImage.getRGB(i, j));
 				final double wDiff = (double) Math.abs(w - i);
 				final double hDiff = (double) Math.abs(h - j);
 				@SuppressWarnings("NonReproducibleMathCall")
 				final double euclideanDistance = Math.sqrt(Math.pow(wDiff, Application.SQUARE_POWER) + Math.pow(hDiff, Application.SQUARE_POWER));
-				distance += Math.round((double) Math.abs(currentColour - targetColour) * euclideanDistance);
+				distance += Math.round((double) Math.abs(currentColour - targetColour) / (euclideanDistance + 1.0));
 			}
 		}
 		return distance;
 	}
 
-	private ArrayList<CandidateImage> crossover(final ArrayList<CandidateImage> chosenImages)
+	private HashSet<CandidateImage> crossover(final HashSet<CandidateImage> chosenImages)
 	{
 		final int childrenRequired = this.populationSize - chosenImages.size();
-		final ArrayList<CandidateImage> children = new ArrayList<CandidateImage>(childrenRequired);
-		final Random randy = new Random(System.currentTimeMillis());
+		final HashSet<CandidateImage> children = new HashSet<CandidateImage>(childrenRequired);
+		final Random randy = new Random(System.nanoTime());
+		final ArrayList<CandidateImage> chosenImagesList = Application.hashsetToArrayList(chosenImages);
 		while(children.size() < childrenRequired)
 		{
-			if(randy.nextDouble() < this.crossoverProb)
-			{
-				final CandidateImage mother = chosenImages.get(randy.nextInt(chosenImages.size()));
-				final CandidateImage father = chosenImages.get(randy.nextInt(chosenImages.size()));
-				final CandidateImage child = new CandidateImage(ImageManipulator.breedCandidates(mother.getImage(), father.getImage()), 0L);
-				children.add(child);
-			}
+			final CandidateImage mother = chosenImagesList.get(randy.nextInt(chosenImages.size()));
+			final CandidateImage father = chosenImagesList.get(randy.nextInt(chosenImages.size()));
+			final CandidateImage child = new CandidateImage(ImageManipulator.breedCandidates(mother.getImage(), father.getImage()), 0L);
+			children.add(child);
 		}
 		return children;
 	}
@@ -265,7 +288,8 @@ public class Application
 		{
 			scoreSet.add(this.calculateFitness(candidateImage.getImage(), baseImage));
 		}
-		return scoreSet.pollFirst();
+		final Long neighbourDistance = this.calculateNeighbourDistance(candidateImage.getImage());
+		return scoreSet.pollFirst() + neighbourDistance;
 	}
 
 	private void exportDebug()
@@ -284,16 +308,16 @@ public class Application
 	{
 		final LinkedList<BufferedImage> originals = ImageIO.importSeedImages(this.importDir);
 		final LinkedList<BufferedImage> greyscales = new LinkedList<BufferedImage>();
-		final LinkedList<BufferedImage> inversions = new LinkedList<BufferedImage>();
+//		final LinkedList<BufferedImage> inversions = new LinkedList<BufferedImage>();
 		for(final BufferedImage original : originals)
 		{
 			greyscales.add(ImageManipulator.toGreyscale(original));
 		}
-		for(final BufferedImage greyscale : greyscales)
-		{
-			inversions.add(ImageManipulator.toInvertedGreyscale(greyscale));
-		}
-		greyscales.addAll(inversions);
+//		for(final BufferedImage greyscale : greyscales)
+//		{
+//			inversions.add(ImageManipulator.toInvertedGreyscale(greyscale));
+//		}
+//		greyscales.addAll(inversions);
 		return greyscales;
 	}
 
@@ -321,13 +345,15 @@ public class Application
 		}
 	}
 
-	private ArrayList<CandidateImage> mutate(final ArrayList<CandidateImage> candidates)
+	private HashSet<CandidateImage> mutate(final HashSet<CandidateImage> candidates)
 	{
-		final Random randy = new Random(System.currentTimeMillis());
-		for(final CandidateImage victim : candidates)
+		final Random randy = new Random(System.nanoTime());
+		final ArrayList<CandidateImage> candidatesList = Application.hashsetToArrayList(candidates);
+		for(int i = 0; i < candidates.size(); i++)
 		{
 			if(randy.nextDouble() < this.mutationProb)
 			{
+				final CandidateImage victim = candidatesList.get(i);
 				candidates.remove(victim);
 				candidates.add(new CandidateImage(ImageManipulator.mutateImage(victim.getImage()), 0L));
 			}
@@ -365,9 +391,9 @@ public class Application
 		return continueIterations;
 	}
 
-	private ArrayList<CandidateImage> select()
+	private HashSet<CandidateImage> select()
 	{
-		final ArrayList<CandidateImage> newCandidateImages = new ArrayList<CandidateImage>(this.populationSize);
+		final HashSet<CandidateImage> newCandidateImages = new HashSet<CandidateImage>(this.populationSize);
 		@SuppressWarnings("NumericCastThatLosesPrecision")
 		final int populationSurvivors = (int) (this.populationSize * this.retentionRate);
 		while(newCandidateImages.size() < populationSurvivors)

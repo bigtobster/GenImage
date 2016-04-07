@@ -76,16 +76,17 @@ public final class ImageManipulator
 		{
 			for(int h = 0; h < height; h++)
 			{
-				final int colour;
+				final Color colour;
 				if(randy.nextDouble() < ImageManipulator.HALF)
 				{
-					colour = mother.getRGB(w, h);
+					colour = new Color(mother.getRGB(w, h), false);
 				}
 				else
 				{
-					colour = father.getRGB(w, h);
+					colour = new Color(father.getRGB(w, h), false);
 				}
-				imageBuilder.setRGB(w, h, colour);
+				final int noAlphaRGB = colour.getRGB();
+				imageBuilder.setRGB(w, h, noAlphaRGB);
 			}
 		}
 		return imageBuilder.getBufferedImage();
@@ -94,13 +95,13 @@ public final class ImageManipulator
 	@SuppressWarnings("StaticMethodOnlyUsedInOneClass")
 	static int calcRGB(final int r, final int g, final int b)
 	{
-		return r + (g * ImageManipulator.RGB_RANGE) + (b * ImageManipulator.RGB_RANGE * ImageManipulator.RGB_RANGE);
+		return new Color(r, g, b, 0).getRGB();
 	}
 
 	@SuppressWarnings("StaticMethodOnlyUsedInOneClass")
 	static BufferedImage mutateImage(final BufferedImage image)
 	{
-		final Random randy = new Random(System.currentTimeMillis());
+		final Random randy = new Random(System.nanoTime());
 		final int pixelsToMutate = randy.nextInt(image.getHeight() * image.getWidth());
 		for(int i = 0; i < pixelsToMutate; i++)
 		{

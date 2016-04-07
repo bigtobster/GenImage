@@ -40,7 +40,7 @@ public final class ImageIO
 			final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 			final GraphicsDevice gd = ge.getDefaultScreenDevice();
 			final GraphicsConfiguration gc = gd.getDefaultConfiguration();
-			return gc.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+			return gc.createCompatibleImage(width, height, Transparency.OPAQUE);
 		}
 
 		@Override
@@ -112,7 +112,7 @@ public final class ImageIO
 	static BufferedImage genNoiseImage(final int width, final int height)
 	{
 		final ImageBuilder imageBuilder = new ImageBuilder(width, height, false);
-		final Random randy = new Random(System.currentTimeMillis());
+		final Random randy = new Random(System.nanoTime());
 		for(int w = 0; w < width; w++)
 		{
 			for(int h = 0; h < height; h++)
