@@ -41,22 +41,34 @@ If you need some images, you can find some in the src tree. See `src/test/resour
 The below is a straight lift from the application help screen
 
 `usage: GenImage`
-`
-    --boxSize <b>          The amount of pixel placement tolerance in fitness comparison`
-`    --crossover <c>        The probability that a candidate will be selected for crossover`
-    `--dump <d>             The number of best candidates to export`
-    `--help                 Display help and usage info`
-    `--input <i>            Path to directory containing images to import`
-    `--iterations <l>       The number of iterations before dumping results and awaiting further instructions`
-    `--mutation <m>         The probability that a candidate will be mutated`
-    `--noveltyBarrier <n>   The minimum percentage of pixels from a single input image which a candidate must match before being eliminated due to lack of novelty`
-    `--populationSize <s>   The size of the candidate population`
-    `--retention <r>        The percentage (as a decimal) of the population to retain during tournament selection`
-    `--tournamentSize <t>   The number of candidates in the tournaments during Tournament selection`
+
+`--boxSize <b>          The amount of pixel placement tolerance in fitness comparison`
+    
+`--crossover <c>        The probability that a candidate will be selected for crossover`
+
+`--dump <d>             The number of best candidates to export`
+    
+`--help                 Display help and usage info`
+ 
+`--input <i>            Path to directory containing images to import`
+  
+`--iterations <l>       The number of iterations before dumping results and awaiting further instructions`
+   
+`--mutation <m>         The probability that a candidate will be mutated`
+    
+`--noveltyBarrier <n>   The minimum percentage of pixels from a single input image which a candidate must match before being eliminated due to lack of novelty`
+  
+`--populationSize <s>   The size of the candidate population`
+    
+`--retention <r>        The percentage (as a decimal) of the population to retain during tournament selection`
+    
+`--tournamentSize <t>   The number of candidates in the tournaments during Tournament selection`
 
 ### Tips!
 
 * The process becomes MASSIVELY more intensive on large images in particular. Use LowRes for quick results.
+* A noted limitation of this application is that the input images must be STRONGLY alike to get any recognisable output - and even then it can be 
+tough.
 * The output is a bit abstract at the moment although it does definitely work. For best results, run lots and lots of cycles (at least several 
 hundred). After a while, you should start to see patterns emerging like strips of congealed colour that look suspiciously like well placed lines. 
 You may also notice parts of the image be slightly more biased to certain colours. This affect increases as you run more cycles.
